@@ -16,10 +16,10 @@ func TestCliHelpAndUsage(t *testing.T) {
 		stdin string
 		want  cli.Result
 	}{
-		{args: []string{"help"}, want: cli.Result{Code: 0, Out: "usage: trailspin COMMAND [ARGS]\n  scan TRACE [--window N] [--max-repeat N] [--max-errors N] [--cycle-reps N]\n             [--max-tokens N] [--max-calls N]\n  keys TRACE\n  summary TRACE\n"}},
-		{args: []string{"-h"}, want: cli.Result{Code: 0, Out: "usage: trailspin COMMAND [ARGS]\n  scan TRACE [--window N] [--max-repeat N] [--max-errors N] [--cycle-reps N]\n             [--max-tokens N] [--max-calls N]\n  keys TRACE\n  summary TRACE\n"}},
-		{args: []string{"--help", "x"}, want: cli.Result{Code: 0, Out: "usage: trailspin COMMAND [ARGS]\n  scan TRACE [--window N] [--max-repeat N] [--max-errors N] [--cycle-reps N]\n             [--max-tokens N] [--max-calls N]\n  keys TRACE\n  summary TRACE\n"}},
-		{args: []string{}, want: cli.Result{Code: 2, Err: "usage: trailspin COMMAND [ARGS]\n  scan TRACE [--window N] [--max-repeat N] [--max-errors N] [--cycle-reps N]\n             [--max-tokens N] [--max-calls N]\n  keys TRACE\n  summary TRACE\n"}},
+		{args: []string{"help"}, want: cli.Result{Code: 0, Out: "usage: trailspin COMMAND [ARGS]\n  scan TRACE [--window N] [--max-repeat N] [--max-errors N] [--cycle-reps N]\n             [--max-tokens N] [--max-calls N]\n  keys TRACE\n  summary TRACE [--top N]\n"}},
+		{args: []string{"-h"}, want: cli.Result{Code: 0, Out: "usage: trailspin COMMAND [ARGS]\n  scan TRACE [--window N] [--max-repeat N] [--max-errors N] [--cycle-reps N]\n             [--max-tokens N] [--max-calls N]\n  keys TRACE\n  summary TRACE [--top N]\n"}},
+		{args: []string{"--help", "x"}, want: cli.Result{Code: 0, Out: "usage: trailspin COMMAND [ARGS]\n  scan TRACE [--window N] [--max-repeat N] [--max-errors N] [--cycle-reps N]\n             [--max-tokens N] [--max-calls N]\n  keys TRACE\n  summary TRACE [--top N]\n"}},
+		{args: []string{}, want: cli.Result{Code: 2, Err: "usage: trailspin COMMAND [ARGS]\n  scan TRACE [--window N] [--max-repeat N] [--max-errors N] [--cycle-reps N]\n             [--max-tokens N] [--max-calls N]\n  keys TRACE\n  summary TRACE [--top N]\n"}},
 	}
 	for _, tc := range tests {
 		if got := run(tc.args, tc.files, tc.stdin); got != tc.want {

@@ -11,24 +11,36 @@ type optionSpec struct {
 	name string
 	min  int64
 	max  int64
-	set  func(*scan.Options, int64)
+	set  func(*settings, int64)
+}
+
+// settings holds what the options of a command set.
+type settings struct {
+	scan scan.Options
+	top  int
+}
+
+var summaryOptionSpecs = []optionSpec{
+	{name: "--top", min: 1, max: 1000, set: func(options *settings, value int64) { options.top = int(value) }},
 }
 
 var scanOptionSpecs = []optionSpec{
-	{name: "--window", min: 2, max: 1000, set: func(options *scan.Options, value int64) { options.Window = int(value) }},
-	{name: "--max-repeat", min: 1, max: 1000, set: func(options *scan.Options, value int64) { options.MaxRepeat = int(value) }},
-	{name: "--max-errors", min: 1, max: 1000, set: func(options *scan.Options, value int64) { options.MaxErrors = int(value) }},
-	{name: "--cycle-reps", min: 2, max: 100, set: func(options *scan.Options, value int64) { options.CycleReps = int(value) }},
-	{name: "--max-tokens", min: 1, max: 1000000000, set: func(options *scan.Options, value int64) { options.MaxTokens = value }},
-	{name: "--max-calls", min: 1, max: 100000, set: func(options *scan.Options, value int64) { options.MaxCalls = int(value) }},
+	{name: "--window", min: 2, max: 1000, set: func(options *settings, value int64) { options.scan.Window = int(value) }},
+	{name: "--max-repeat", min: 1, max: 1000, set: func(options *settings, value int64) { options.scan.MaxRepeat = int(value) }},
+	{name: "--max-errors", min: 1, max: 1000, set: func(options *settings, value int64) { options.scan.MaxErrors = int(value) }},
+	{name: "--cycle-reps", min: 2, max: 100, set: func(options *settings, value int64) { options.scan.CycleReps = int(value) }},
+	{name: "--max-tokens", min: 1, max: 1000000000, set: func(options *settings, value int64) { options.scan.MaxTokens = value }},
+	{name: "--max-calls", min: 1, max: 100000, set: func(options *settings, value int64) { options.scan.MaxCalls = int(value) }},
 }
 
 // parseOptions removes command options from args and returns a diagnostic without
 // the common trailspin prefix when parsing fails.
-func parseOptions(command string, args []string) (scan.Options, []string, string) {
-	options := scan.Options{}
+func parseOptions(command string, args []string) (settings, []string, string) {
+	options := settings{}
+	specs := summaryOptionSpecs
 	if command == "scan" {
-		options = scan.DefaultOptions()
+		options.scan = scan.DefaultOptions()
+		specs = scanOptionSpecs
 	}
 
 	positional := make([]string, 0, len(args))
@@ -43,31 +55,31 @@ func parseOptions(command string, args []string) (scan.Options, []string, string
 		if equals := strings.IndexByte(argument, '='); equals >= 0 {
 			name, value, hasEquals = argument[:equals], argument[equals+1:], true
 		}
-		if command != "scan" {
-			return scan.Options{}, nil, "unknown option \"" + argument + "\""
+		if command == "keys" {
+			return settings{}, nil, "unknown option \"" + argument + "\""
 		}
-		spec, found := findOption(name)
+		spec, found := findOption(specs, name)
 		if !found {
-			return scan.Options{}, nil, "unknown option \"" + argument + "\""
+			return settings{}, nil, "unknown option \"" + argument + "\""
 		}
 		if !hasEquals {
 			if index+1 >= len(args) {
-				return scan.Options{}, nil, "option " + name + " needs a value"
+				return settings{}, nil, "option " + name + " needs a value"
 			}
 			index++
 			value = args[index]
 		}
 		parsed, valid := parseOptionValue(value, spec.min, spec.max)
 		if !valid {
-			return scan.Options{}, nil, "bad " + name + " value \"" + value + "\": expected an integer from " + strconv.FormatInt(spec.min, 10) + " to " + strconv.FormatInt(spec.max, 10)
+			return settings{}, nil, "bad " + name + " value \"" + value + "\": expected an integer from " + strconv.FormatInt(spec.min, 10) + " to " + strconv.FormatInt(spec.max, 10)
 		}
 		spec.set(&options, parsed)
 	}
 	return options, positional, ""
 }
 
-func findOption(name string) (optionSpec, bool) {
-	for _, spec := range scanOptionSpecs {
+func findOption(specs []optionSpec, name string) (optionSpec, bool) {
+	for _, spec := range specs {
 		if spec.name == name {
 			return spec, true
 		}

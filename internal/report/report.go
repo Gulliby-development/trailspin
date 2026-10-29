@@ -23,7 +23,9 @@ func Keys(calls []trace.Call) string {
 }
 
 // Summary returns per-tool totals ordered by descending call count and then tool name.
-func Summary(calls []trace.Call) string {
+// With top above zero, only the first top tools get a row and one "(others)" row
+// adds up the rest; the total row always covers every call.
+func Summary(calls []trace.Call, top int) string {
 	type totals struct {
 		calls  int
 		fails  int
@@ -61,9 +63,19 @@ func Summary(calls []trace.Call) string {
 	})
 
 	var output strings.Builder
-	for _, name := range tools {
+	var others totals
+	for index, name := range tools {
 		tool := byTool[name]
+		if top > 0 && index >= top {
+			others.calls += tool.calls
+			others.fails += tool.fails
+			others.tokens += tool.tokens
+			continue
+		}
 		fmt.Fprintf(&output, "%s %d %d %d\n", name, tool.calls, tool.fails, tool.tokens)
+	}
+	if others.calls > 0 {
+		fmt.Fprintf(&output, "(others) %d %d %d\n", others.calls, others.fails, others.tokens)
 	}
 	fmt.Fprintf(&output, "total %d %d %d\n", all.calls, all.fails, all.tokens)
 	return output.String()
