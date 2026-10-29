@@ -12,7 +12,7 @@ import (
 )
 
 // Usage is the command synopsis, including its final newline.
-const Usage = "usage: trailspin COMMAND [ARGS]\n  scan TRACE [--window N] [--max-repeat N] [--max-errors N] [--cycle-reps N]\n             [--max-tokens N] [--max-calls N]\n  keys TRACE\n  summary TRACE\n"
+const Usage = "usage: trailspin COMMAND [ARGS]\n  scan TRACE [--window N] [--max-repeat N] [--max-errors N] [--cycle-reps N]\n             [--max-tokens N] [--max-calls N]\n  keys TRACE\n  summary TRACE [--top N]\n"
 
 // Env supplies all input sources used by Run.
 type Env struct {
@@ -75,9 +75,9 @@ func Run(args []string, env Env) Result {
 	case "keys":
 		return Result{Out: report.Keys(calls)}
 	case "summary":
-		return Result{Out: report.Summary(calls)}
+		return Result{Out: report.Summary(calls, options.top)}
 	default:
-		findings := scan.Analyze(calls, options)
+		findings := scan.Analyze(calls, options.scan)
 		if len(findings) == 0 {
 			word := "calls"
 			if len(calls) == 1 {

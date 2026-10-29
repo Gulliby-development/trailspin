@@ -42,7 +42,7 @@ The canonical form of `args` has no insignificant whitespace, sorts object keys 
 trailspin COMMAND [ARGS]
 ```
 
-Use `-` as TRACE to read standard input. The process reads stdin through EOF before producing a report; it does not stream or tail input. Options are available only for `scan`. Each may be written as `--name N` or `--name=N`, anywhere among the arguments after the command, including before or after TRACE. The last occurrence wins, but every occurrence is validated. Arguments beginning with `-` (except the path `-`) are parsed as options. `keys` and `summary` accept no options.
+Use `-` as TRACE to read standard input. The process reads stdin through EOF before producing a report; it does not stream or tail input. Options are available only for `scan` and, with `--top`, for `summary`. Each may be written as `--name N` or `--name=N`, anywhere among the arguments after the command, including before or after TRACE. The last occurrence wins, but every occurrence is validated. Arguments beginning with `-` (except the path `-`) are parsed as options. `keys` and `summary` accept no options.
 
 ### `keys TRACE`
 
@@ -70,7 +70,7 @@ Then `trailspin keys keys.jsonl` prints:
 4 run_tests ok 40 {"cmd":"go test","dir":"."}
 ```
 
-### `summary TRACE`
+### `summary TRACE [--top N]`
 
 Prints one row per tool, with columns `TOOL CALLS FAILS TOKENS`, ordered by descending call count and then tool name. A final `total CALLS FAILS TOKENS` row includes all calls; an empty trace prints `total 0 0 0`.
 
@@ -90,6 +90,15 @@ edit 1 0 30001
 grep 1 0 30000
 read_file 1 0 40000
 run_tests 1 0 5
+total 4 0 100006
+```
+
+With `--top N` (an integer from 1 to 1000, written like the `scan` options) only the first N tool rows are printed, in the same order, and one `(others) CALLS FAILS TOKENS` row adds up the tools left out; there is no such row when every tool fits. The `total` row always covers all calls. Using the same `summary.jsonl`, `trailspin summary summary.jsonl --top 2` prints:
+
+```text
+edit 1 0 30001
+grep 1 0 30000
+(others) 2 0 40005
 total 4 0 100006
 ```
 
